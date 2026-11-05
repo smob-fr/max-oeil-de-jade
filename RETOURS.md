@@ -1,6 +1,8 @@
 # Retours des testeurs — à traiter
 
-Liste des retours reçus et des pistes proposées. Rien n'est encore développé.
+Liste des retours reçus et ce qui a été fait.
+
+**État : les trois retours ci-dessous sont traités** (amulettes, flèches en bois / empoisonnées, stalactites variées). Les vrais achats et les vraies vidéos ne fonctionneront que dans l'appli des stores ; sur le web, ce sont des écrans de démonstration.
 
 ## 1. « Passer un niveau » n'est ni amusant ni rentable
 
