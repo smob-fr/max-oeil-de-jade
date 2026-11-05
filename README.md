@@ -25,6 +25,11 @@ La dynamite sert à ouvrir les murs fissurés.
 | 9 | Les jardins suspendus | vent, Max-miroir, nuages fantômes, balançoires |
 | 10 | La chambre du trésor | sable qui monte, tous les pièges réunis, la vraie finale (niveau 100) |
 
+**Passer un niveau** : après 5 chutes dans le même niveau (ou depuis la pause), on peut passer le niveau
+en regardant une vidéo sponsorisée. Dans l'appli des stores, c'est une vraie vidéo récompensée AdMob
+(plugin `@capacitor-community/admob`, identifiant à renseigner dans `PUB.adId` de `game.js`, actuellement
+l'identifiant de test de Google) ; sur le web, un écran de démonstration de 5 secondes la remplace.
+
 Chaque acte alterne Exploration, Trahison, Action et Histoire. Le temple se souvient :
 certains pièges changent selon le nombre de morts dans le niveau. La progression et les records
 sont gardés dans le navigateur.
