@@ -17,6 +17,7 @@
 - **Graphisme de la carte** : plus travaillé, avec les mêmes personnages que dans le jeu (Max et Archibald reconnaissables).
 - **Histoire ouverte** : l’Œil de Jade est trouvé au monde 5, mais l’histoire doit pouvoir continuer avec un 6ᵉ monde ou plus (par exemple, Archibald s’enfuit avec un morceau de la carte, ou l’Œil révèle un autre trésor).
 - **Abysses** : alterner surface et plongée pour que la nage ne lasse pas. Prototyper 2 ou 3 niveaux avant de faire les 20.
+- **Moins de texte pendant les niveaux** : Archibald ne parle presque plus en jouant (au plus une courte bulle de quelques mots, sans jamais gêner l'action). L'histoire est racontée **à la fin du niveau**, sur l'écran de victoire : une petite scène avec Archibald, qu'on lit tranquillement avant de passer au niveau suivant. Les niveaux d'histoire (5, 10, 15) et les boss ont une scène un peu plus longue.
 - **Boss du Yéti** : la mécanique doit être comprise sans explication (indices visuels clairs).
 
 ## Ordre de développement proposé
