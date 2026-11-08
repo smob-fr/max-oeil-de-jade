@@ -1,6 +1,30 @@
 # Plan de cadrage : Max et l’Œil de Jade
 
-> Statut : **proposition à valider**. Rien de ceci n’est encore développé. Les validations se font dans l’Atlas (page interactive) ; ce document sera mis à jour avec les décisions.
+> Statut : **validé** le 8 novembre 2026 (312 oui, 7 non sur 319 idées). Pas encore développé.
+
+## Décisions et ajustements issus de la validation
+
+**Refusé**
+- Le trésor secret « visible » des niveaux incas 10, 11, 14 et 19 : remplacé par des **salles secrètes** (voir plus bas).
+- La grille + dalle à pression dans les niveaux incas 13, 17 et 18 : on ne garde cette combinaison que dans le niveau 9 (et le 12, ancien niveau 21).
+
+**Ajouts et précisions**
+- **Salles secrètes** : derrière un faux mur, un mur fissuré ou un passage caché, une petite salle (un mini-niveau à part entière) avec des pièces et un trésor. Le chemin pour y entrer varie d’un niveau à l’autre ; le trésor ne doit plus se voir depuis le niveau.
+- **Variété** : jamais deux fois la même association de pièges (en particulier grille + dalle à pression + pics surprise).
+- **Lianes qui se balancent** (monde inca) : la liane oscille de gauche à droite, Max doit s’y accrocher au bon moment et sauter de liane en liane.
+- **Ressorts qui cassent** (niveau inca 5) : il doit toujours rester un chemin pour finir le niveau, même si le ressort est cassé.
+- **Carte** : dans un monde, les niveaux sont des points sur un chemin. On peut revenir en arrière pour rejouer, jamais avancer au-delà du dernier niveau fini.
+- **Graphisme de la carte** : plus travaillé, avec les mêmes personnages que dans le jeu (Max et Archibald reconnaissables).
+- **Histoire ouverte** : l’Œil de Jade est trouvé au monde 5, mais l’histoire doit pouvoir continuer avec un 6ᵉ monde ou plus (par exemple, Archibald s’enfuit avec un morceau de la carte, ou l’Œil révèle un autre trésor).
+- **Abysses** : alterner surface et plongée pour que la nage ne lasse pas. Prototyper 2 ou 3 niveaux avant de faire les 20.
+- **Boss du Yéti** : la mécanique doit être comprise sans explication (indices visuels clairs).
+
+## Ordre de développement proposé
+
+1. **Carte des mondes et carte d’un monde** (points de niveaux), sauvegarde par monde, avec les 100 niveaux actuels rangés provisoirement.
+2. **Monde inca** : les 19 niveaux choisis, rallongés, avec salles secrètes, lianes qui se balancent, singes et jaguars, rayons du soleil, têtes qui crachent ; puis le boss Jaguar de pierre.
+3. **Prototype abysses** : 2 ou 3 niveaux (surface + plongée) pour valider la nage.
+4. **Himalaya**, puis **Abysses**, **Nuages**, **Cité d’or**, un monde à la fois, chacun validé en jeu avant de passer au suivant.
 
 ## Les grandes règles
 
