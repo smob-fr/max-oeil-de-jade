@@ -3302,6 +3302,231 @@ def boss_oiseau():
 
 
 # =====================================================================
+#  MONDE 5 — LA CITÉ D'OR (20 niveaux) : la lave, et des mécanismes dorés qui bougent tout le temps
+# =====================================================================
+def _lave_fond(n, c):
+    """Colonne au-dessus du vide… avec de la lave tout au fond."""
+    n.put(c, n.h - 2, "R"); n.put(c, n.h - 1, "#")
+
+
+def _fosse_possible(n):
+    """Il faut au moins deux cases de vide sous le sol pour une fosse de lave : sinon on monte d'abord."""
+    while n.y > n.h - 5:
+        n.monte(min(2, n.y - (n.h - 5))); n.plat(2)
+
+
+def _v_lave(n, d, r):
+    n.plat(2)
+    for _ in range(2 + (d > 0 and r.random() < 0.5)):
+        c = n.colonne(); n.put(c, n.y + 1, "R")
+    n.plat(2)
+
+
+def _v_tapis(n, d, r):
+    sens = r.choice("{}}")
+    x0 = n.plat(1)
+    for _ in range(6 + 2 * d):
+        c = n.colonne(); n.put(c, n.y + 1, sens)
+    for _ in range(2):
+        c = n.colonne(); n.put(c, n.y + 1, "R")
+    n.plat(2)
+    n.astuce("Tapis roulant : il t'emporte… jusqu'à la lave !" if sens == "}" else "Ce tapis roule à l'envers : prends de l'élan !", x0, max=0)
+
+
+def _v_jets(n, d, r):
+    long = 9 + 2 * d
+    x0 = n.plat(long)
+    per = r.choice((160, 180))
+    for k, x in enumerate(range(x0 + 2, x0 + long - 1, 3)):
+        n.opts.setdefault("jets", []).append([x, n.y, 3, per, (k * 50) % per])
+    n.astuce("Quand la grille fume, le feu va jaillir !", x0 - 2, max=0)
+
+
+def _v_wagon(n, d, r):
+    if n.y < 7:
+        return False
+    _fosse_possible(n)
+    n.plat(2)
+    L = 14 + 2 * d
+    x0 = n.x
+    for k in range(L):
+        c = n.colonne(fond="vide"); _lave_fond(n, c)
+        if d and k in (5, 6, 10, 11):
+            n.put(c, n.y - 4, "#"); n.put(c, n.y - 3, "v")   # pics au plafond : ne saute pas ici
+    n.movers.append([x0, n.y + 1, 3, L - 3, 0, 0, "wagon"])
+    n.plat(4)
+    n.astuce("Monte dans le wagonnet ! Il bascule au bout des rails : saute avant !", x0 - 2, max=0)
+
+
+def _v_magma(n, d, r):
+    long = 12 + 2 * d
+    x0 = n.plat(long)
+    n.opts.setdefault("grele", []).append([x0, x0 + long - 1, 130 - 15 * d, r.randint(0, 60), 1])
+    n.astuce("Pluie de magma : regarde les ombres au sol", x0 - 2, max=0)
+
+
+def _v_pont(n, d, r):
+    _fosse_possible(n)
+    x0 = n.plat(2)
+    for _ in range(5 + d):
+        c = n.colonne(fond="vide"); n.put(c, n.y + 1, "%"); _lave_fond(n, c)
+    n.plat(2)
+    n.astuce("Les dalles d'or fondent sous tes pieds : cours !", x0, max=0)
+
+
+def _v_engrenage(n, d, r):
+    if n.y < 9:
+        return False
+    _fosse_possible(n)
+    rr = 3
+    a = (n.x - 1, n.y)
+    x0 = n.x
+    for _ in range(2 * rr + 3):
+        c = n.colonne(fond="vide"); _lave_fond(n, c)
+    cx, cy = x0 + rr + 1, n.y - 1
+    n.opts.setdefault("moulins", []).append([cx, cy, rr, round(0.9 + 0.15 * d, 2), 4, "engrenage"])
+    n.y -= 3
+    n.plat(4)
+    n.liens.append([list(a), [n.x - 4, n.y]])
+    n.astuce("Engrenage : monte sur une dent, laisse-toi porter", x0 - 3, max=0)
+
+
+def _v_effondre(n, d, r):
+    avant = len(n.trig)
+    n.fuite_effondrement(14 + 2 * d)
+    for tr in n.trig[avant:]:
+        if any(a[0] == "collapse" for a in tr["act"]):
+            tr["lethal"] = True   # le sol tombe derrière Max : le vérificateur regarde le chemin, pas l'après
+
+
+def _v_leviers(n, d, r):
+    if n.y < 6:
+        return False
+    n.leviers()
+
+
+MOTIFS.update({"lave": _v_lave, "tapis": _v_tapis, "jets": _v_jets, "wagon": _v_wagon, "magma": _v_magma,
+               "pont_or": _v_pont, "engrenage": _v_engrenage, "effondre_or": _v_effondre, "leviers": _v_leviers,
+               "golem": _ennemi("N", 8), "salamandre": _ennemi("I", 10), "gardien": _ennemi("U", 8), "robot": _ennemi("d", 10),
+               "pistons": _m_ecraseurs, "vapeur": _m_geyser, "miroirs": _m_soleil})
+
+NIVEAUX_OR = [
+    ("Les portes d'or", "exploration", ["tapis", "lave", "jets", "salamandre"], {}),
+    ("La rivière de lave", "action", ["lave", "pont_or", "engrenage", "salamandre"], {}),
+    ("Les jets de feu", "action", ["jets", "lave", "tapis", "golem"], {}),
+    ("Le wagonnet", "action", ["wagon", "lave", "jets", "salamandre"], {}),
+    ("La salle des trésors", "histoire", ["gardien", "leviers", "tapis", "lave"], {}),
+    ("Les tapis roulants", "trahison", ["tapis", "jets", "lave", "robot"], {}),
+    ("Les golems", "action", ["golem", "lave", "pistons", "tapis"], {}),
+    ("La pluie de magma", "action", ["magma", "lave", "golem", "jets"], {}),
+    ("La fournaise", "action", ["jets", "lave", "tapis", "pont_or"], {"_timer": True}),
+    ("Les miroirs solaires", "histoire", ["miroirs", "gardien", "lave", "tapis"], {}),
+    ("Les salamandres", "action", ["salamandre", "lave", "jets", "pont_or"], {}),
+    ("Les engrenages", "exploration", ["engrenage", "lave", "tapis", "golem"], {}),
+    ("Les pistons d'or", "trahison", ["pistons", "tapis", "lave", "salamandre"], {}),
+    ("La vapeur", "exploration", ["vapeur", "jets", "lave", "golem"], {}),
+    ("Le marché aux trésors", "histoire", ["gardien", "tapis", "pont_or", "robot"], {}),
+    ("Les ponts qui fondent", "action", ["pont_or", "lave", "magma", "salamandre"], {}),
+    ("La forge d'Archibald", "action", ["robot", "pistons", "tapis", "jets"], {}),
+    ("L'effondrement", "action", ["effondre_or", "lave", "magma", "golem"], {}),
+    ("Le cœur du volcan", "exploration", ["lave", "wagon", "engrenage", "magma", "pont_or", "gardien", "robot", "jets", "tapis"], {}),
+]
+
+INTRO_OR = {
+    1: ["La cité d'or ! Ici, tout bouge : tapis, engrenages, jets de feu… Et la lave brûle !"],
+    2: ["Lave : ne tombe pas dedans. Les dalles d'or fondent sous les pieds"],
+    3: ["Jets de feu : quand la grille fume, attends"],
+    4: ["Le wagonnet t'emmène au-dessus de la lave. Saute avant qu'il bascule !"],
+    5: ["La salle des trésors… Les gardiens d'or bougent quand tu leur tournes le dos"],
+    6: ["Certains tapis roulent vers la lave, d'autres à l'envers"],
+    7: ["Golem de lave : il faut deux coups pour l'assommer"],
+    8: ["Pluie de magma ! Les ombres annoncent les pierres en fusion"],
+    9: ["La fournaise : Archibald a allumé une mèche. Vite !"],
+    10: ["Les miroirs d'or renvoient le soleil : reste à l'ombre des piliers"],
+    11: ["Salamandre : elle file et laisse une traînée de feu"],
+    12: ["Engrenage : monte sur une dent, laisse-toi porter"],
+    13: ["Pistons d'or : passe quand ils remontent"],
+    14: ["La vapeur te propulse vers le haut"],
+    15: ["Le marché aux trésors : ne tourne pas le dos aux gardiens !"],
+    16: ["Les dalles d'or fondent : cours sans t'arrêter"],
+    17: ["Robots d'Archibald : s'ils te voient, ALARME et pluie de magma !"],
+    18: ["Tout s'effondre derrière toi : fonce !"],
+    19: ["Le cœur du volcan : tout le jeu réuni. Courage, Max !"],
+}
+
+FIN_OR = {
+    1: "Archibald, devant une porte d'or : « Une cité entière en or ! Je vais être riche ! Enfin… plus riche. Enfin… riche. »",
+    2: "Archibald souffle sur ses bottes qui fument : « La lave, c'est comme le chocolat chaud. Ça a l'air bon, mais ça brûle. »",
+    3: "Archibald, les sourcils roussis : « Ma moustache ! Ma belle moustache ! Il en reste la moitié. »",
+    4: "Archibald sort du wagonnet, tout ébouriffé : « Encore ! Encore un tour ! Non. En fait non. »",
+    5: "Histoire. Dans la salle des trésors, Archibald trouve la dernière pièce de sa carte. Elle montre le cœur du volcan… et une phrase de son grand-père : « Ensemble, ou pas du tout. » Il range vite la carte dans sa poche.",
+    6: "Archibald court à reculons sur un tapis : « J'avance ! Je recule ! Je ne sais plus ! »",
+    7: "Archibald, assis sur un golem endormi : « Il ronfle. Comme mon oncle Gérard. »",
+    8: "Archibald, avec une casserole sur la tête : « Un chapeau, c'est bien. Une casserole, c'est mieux. »",
+    9: "Archibald, en sueur : « Il fait chaud, il fait chaud, il fait CHAUD ! Quelqu'un a de la glace ? »",
+    10: "Histoire. Les miroirs d'or s'alignent et éclairent une fresque : deux explorateurs qui portent ensemble l'Œil de Jade. Archibald regarde longtemps. « Mon grand-père… et le tien, Max ? »",
+    11: "Archibald saute d'un pied sur l'autre : « Ces salamandres laissent du feu partout ! Aucune politesse ! »",
+    12: "Archibald, coincé dans un engrenage : « Je suis devenu une pièce de la machine. Une pièce très importante. »",
+    13: "Archibald, aplati comme une crêpe : « Je vais bien. Je suis juste… plus large. »",
+    14: "Archibald, propulsé par la vapeur : « Je voooole ! Comme l'Oiseau-tonnerre ! En moins gracieux ! »",
+    15: "Histoire. Au marché aux trésors, Archibald tend la main : « Max, je te propose un marché. L'Œil de Jade… on le prend à deux ? » Puis il se ravise : « Non ! Il est à moi ! Rendez-vous au cœur du volcan ! »",
+    16: "Archibald, sur une dalle qui fond : « Ma dalle fond. Ma dalle fond ! Pourquoi c'est toujours MA dalle ? »",
+    17: "Archibald, au milieu de ses robots : « Ils sont gentils, en vrai. Ils sonnent juste un peu fort. »",
+    18: "Archibald, couvert de poussière : « Tout s'est effondré. Sauf mon moral. Enfin, un peu mon moral aussi. »",
+    19: "Archibald, devant une énorme machine à vapeur : « Tu aimes mon Fouisseur ? Il creuse jusqu'à l'Œil de Jade ! Recule, Max ! »",
+    20: "Le Fouisseur cale dans un nuage de suie. Archibald en sort, tout noir, et tousse : « D'accord, d'accord… Tu as gagné. » Il sourit enfin : « On le prend ensemble, l'Œil de Jade ? » Max hoche la tête. Ensemble, ils ouvrent le cœur du volcan. FIN… pour l'instant !",
+}
+
+
+def monde_or():
+    NUMERO[0] = 0
+    L = []
+    for i, (nom, type_, motifs, opts) in enumerate(NIVEAUX_OR):
+        opts = dict(opts)
+        timer = opts.pop("_timer", False)
+        n = Niveau(nom, type_, monde=5, sol=12)
+        n.defi = n.num in DEFIS_MONDE
+        n._palette = "cite"
+        n.motifs = motifs
+        n.cible = 150 if type_ == "histoire" else 195 if n.defi else 180
+        n.depart(4)
+        for k, txt in enumerate(INTRO_OR.get(n.num, [])):
+            n.astuce(txt, 4 + k * 14, max=0)
+        allonger(n)
+        n.porte(4)
+        if timer:
+            n.minuterie(2.4)
+        lv = n.fini()
+        lv["decor"] = "cite"
+        lv["fin"] = FIN_OR[n.num]
+        L.append(lv)
+    L.append(boss_fouisseur())
+    L[-1]["fin"] = FIN_OR[20]
+    return L
+
+
+def boss_fouisseur():
+    """Arène du boss : la machine d'Archibald à droite, trois cheminées sur son toit, des marches pour y monter."""
+    W, h, sol = 44, 17, 14
+    rows = [["#"] * W for _ in range(h)]
+    for y in range(1, sol + 1):
+        for x in range(1, W - 1):
+            rows[y][x] = "."
+    for y in range(9, sol + 1):
+        for x in range(30, 42):
+            rows[y][x] = "8"
+    for x in (32, 35, 38):
+        rows[7][x] = rows[8][x] = "8"
+    for (x, y) in ((21, 13), (24, 11), (27, 10)):
+        rows[y][x] = rows[y][x + 1] = "#"
+    rows[sol][2] = "P"; rows[sol][10] = "D"; rows[sol][7] = "t"
+    return {"name": "Le Fouisseur d'Archibald", "type": "histoire", "ammo": [6, 1], "map": ["".join(r) for r in rows],
+            "triggers": [{"zone": [4, 1, 1, h - 2], "max": 0, "act": [["hint", "Monte sur la machine et lâche une dynamite (BOUM) dans chaque cheminée ! Évite la fumée noire : le feu va jaillir."]]}],
+            "machine": [30, 9, 12, 6], "cheminees": [[32, 7], [35, 7], [38, 7]], "caisse": [7, sol],
+            "boss": "fouisseur", "doorHidden": True, "monde": 5, "palette": "cite", "decor": "cite", "_tnt": 0}
+
+
+# =====================================================================
 #  MONDE 2 — LES NEIGES DE L'HIMALAYA (20 niveaux)
 # =====================================================================
 FIN_HIMALAYA = {
@@ -3611,13 +3836,13 @@ def accessible(g, porte, liens=(), depart=None, eau=None, bulles=(), chaud=None,
             return False
         if y >= H:
             return True
-        return g[y][x] not in "#J<>()^vcgG=qnziyVK~%*"  # B, x, F, o, _ sont traversables (dynamite / chute / illusion / fantôme / dalle)
+        return g[y][x] not in "#J<>()^vcgG=qnziyVK~%*{}8"  # B, x, F, o, _ sont traversables (dynamite / chute / illusion / fantôme / dalle)
 
     def mortel(x, y):
-        return 0 <= y < H and 0 <= x < W and g[y][x] in "^v"
+        return 0 <= y < H and 0 <= x < W and g[y][x] in "^vR"
 
     def porteur(x, y):
-        return 0 <= y < H and 0 <= x < W and g[y][x] in "#BJ<>()cgG=qnziyVK~%*"   # q (ressort fragile) compte comme un simple sol
+        return 0 <= y < H and 0 <= x < W and g[y][x] in "#BJ<>()cgG=qnziyVK~%*{}8"   # q (ressort fragile) compte comme un simple sol
 
     def debout(x, y):
         if 0 <= y < H and 0 <= x < W and g[y][x] == "|":
@@ -3894,9 +4119,10 @@ def _occupees(lv):
         if "zone" in tr:
             zx, _, zw, _ = tr["zone"]
             occ.update(range(zx - 1, zx + zw + 1))
-    for k in ("movers", "crushers", "winds", "vines", "flames", "beams", "secrets", "glacons"):
+    for k in ("movers", "crushers", "winds", "vines", "flames", "beams", "secrets", "glacons", "jets", "moulins", "grele"):
         for e in lv.get(k, []):
-            if k == "winds": occ.update(range(e[0] - 1, e[1] + 2))
+            if k in ("winds", "grele"): occ.update(range(e[0] - 1, e[1] + 2))
+            elif k == "moulins": occ.update(range(e[0] - e[2] - 3, e[0] + e[2] + 4))
             elif k == "movers": occ.update(range(e[0] - 1, e[0] + e[2] + e[3] + 2))
             elif k == "secrets": occ.update(range(e[0] - 1, e[0] + e[2] + 1))
             elif k == "vines": occ.update(range(e[0] - 6, e[0] + 7))
@@ -4140,6 +4366,14 @@ def main():
             lv["_pieges"] = pimenter_ciel(lv, 4000 + i)
         drapeaux(lv)
         pieces(lv)
+    cite = monde_or()
+    for i, lv in enumerate(cite):
+        lv["act"] = 4
+        adoucir(lv)
+        if not lv.get("boss"):
+            lv["_pieges"] = pimenter(lv, 5000 + i)
+        drapeaux(lv)
+        pieces(lv)
     him = monde_himalaya()
     for lv in him:
         lv["act"] = 2
@@ -4166,14 +4400,15 @@ def main():
     for i, lv in enumerate(him): lv["id"] = f"him-{i+1}"
     for i, lv in enumerate(mer): lv["id"] = f"aby-{i+1}"
     for i, lv in enumerate(nua): lv["id"] = f"nua-{i+1}"
+    for i, lv in enumerate(cite): lv["id"] = f"or-{i+1}"
     for lv in autres: lv["id"] = f"old-{lv['orig']}"
     ordre_v2 = [lv["id"] for lv in inca] + [lv["id"] for lv in autres]
     ordre_v3 = [lv["id"] for lv in inca] + [lv["id"] for lv in autres[:20]] + ["mer-1", "mer-2", "mer-3"] + [lv["id"] for lv in autres[23:]]
-    niveaux = inca + him + mer + nua + autres[-20:]
+    niveaux = inca + him + mer + nua + cite
     assert len(niveaux) == 100, len(niveaux)
     err = verifier(niveaux)
     print("Pièges refusés par le vérificateur :", REJETS)
-    print("Pièges surprises :", " ".join(f"{lv['id']}:{lv.get('_pieges', 0)}" for lv in inca + him + mer + nua))
+    print("Pièges surprises :", " ".join(f"{lv['id']}:{lv.get('_pieges', 0)}" for lv in inca + him + mer + nua + cite))
     for lv in niveaux:
         lv.pop("_pieges", None)
         lv.pop("_tnt", None)
@@ -4190,6 +4425,7 @@ def main():
     tailles = [len(lv["map"][0]) for lv in niveaux]
     print(f"{len(niveaux)} niveaux écrits, largeur {min(tailles)}–{max(tailles)} cases, {err} erreur(s)")
     print("Himalaya :", ", ".join(f"{i+1} {lv['name']} ({len(lv['map'][0])}×{len(lv['map'])})" for i, lv in enumerate(him)))
+    print("Cité d'or :", ", ".join(f"{lv['name']} ({len(lv['map'][0])}×{len(lv['map'])})" for lv in cite))
     print("Nuages :", ", ".join(f"{lv['name']} ({len(lv['map'][0])}×{len(lv['map'])})" for lv in nua))
     print("Abysses :", ", ".join(f"{lv['name']} ({len(lv['map'][0])}×{len(lv['map'])})" for lv in mer))
     print("Monde inca :", ", ".join(f"{i+1} {lv['name']} ({len(lv['map'][0])}×{len(lv['map'])}, {len(lv.get('checkpoints', []))} drapeau(x))" for i, lv in enumerate(inca)))
