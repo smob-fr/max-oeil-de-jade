@@ -1,0 +1,11 @@
+{
+  "name": "max-oeil-de-jade-tests",
+  "private": true,
+  "description": "Tests de bout en bout de Max et l'Œil de Jade (Chromium piloté par Playwright)",
+  "scripts": {
+    "test": "node lancer.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
+}

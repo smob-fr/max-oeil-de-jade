@@ -59,7 +59,7 @@ python3 -m http.server 8765        # puis ouvrir http://localhost:8765/
   - `mesurePerf(n)` fait avancer `n` images et en donne le temps moyen.
   - `room` donne l'état du niveau en cours.
   - `apercuNiveau(i)` donne une image du niveau entier.
-- Les tests automatiques (robots qui battent les boss, tests de chaque mécanique, mesure des sauts) ont été écrits avec Playwright pendant le développement. Ils **ne font pas partie du dépôt**.
+- **Tests automatiques** (`outils/tests/`, 16 tests, environ 4 minutes) : les robots qui battent les 5 boss, chaque mécanique des 5 mondes, les 100 niveaux, les plateformes mobiles et le saut tactile. Pour les lancer : une seule fois `cd outils/tests && npm install && npx playwright install chromium`, puis `node outils/tests/lancer.js` depuis la racine (ou `node outils/tests/lancer.js boss saut` pour n'en lancer qu'une partie ; code de sortie 1 en cas d'échec).
 
 ## Fonctionnalités
 
@@ -115,7 +115,7 @@ python3 -m http.server 8765        # puis ouvrir http://localhost:8765/
 - **Écran de fin du jeu** : il ne montre pas encore l'Œil de Jade et la fin de l'histoire (Max et Archibald ensemble). Pour l'instant, la fin passe par le récit du dernier niveau.
 - **Musique** : il n'y a que des bruitages synthétisés. Le cadrage prévoit une musique par monde.
 - **Version des stores** (appli) : vrais achats intégrés et vraies vidéos sponsorisées, à brancher. Sur le web, ce sont des écrans de démonstration.
-- **Tests automatiques** : intégrer au dépôt les robots Playwright (boss, mécaniques, sauts tactiles) et les lancer en intégration continue.
+- **Tests automatiques** : lancer `outils/tests/` en intégration continue, à chaque envoi sur GitHub.
 - **Nettoyage**
   - `niveaux.py` contient encore les fonctions des anciens niveaux provisoires (`acte1` à `acte10`). Elles servent seulement à reprendre les anciennes sauvegardes.
   - `game.js` mériterait d'être découpé par monde.
