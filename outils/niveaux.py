@@ -3998,6 +3998,11 @@ def verifier(niveaux):
                 print(f"✗ {i+1:2d} {lv['name']} (morts={morts}): {pourquoi}")
                 erreurs += 1
                 break
+        if lv.get("eau") is None and lv.get("monde") != 4:
+            ilots = ilots_pieges(lv)
+            if ilots:
+                print(f"✗ {i+1:2d} {lv['name']}: des pièges ne laissent qu'une case pour atterrir entre deux dangers en {sorted(ilots)[:4]}")
+                erreurs += 1
     return erreurs
 
 
@@ -4213,11 +4218,44 @@ def _p_saut(lv, g, x, L, y, r, H):
 REJETS = {}
 
 
+_SOL_ILOT = set("#BxJ<>cgGqnziyVK~%*{}8")
+
+
+def _ilots(g):
+    """Cases d'une seule largeur où l'on tient debout, coincées entre deux dangers (pics, lave ou trou)."""
+    H, W = len(g), len(g[0])
+    def danger(x, y):
+        if g[y][x] in "^vR" or g[y + 1][x] in "^vR":
+            return True
+        return all(g[yy][x] not in _SOL_ILOT for yy in range(y + 1, min(H, y + 4)))
+    r = set()
+    for y in range(2, H - 1):
+        for x in range(2, W - 2):
+            if g[y][x] == "." and g[y + 1][x] in _SOL_ILOT and g[y][x - 1] not in _SOL_ILOT and g[y][x + 1] not in _SOL_ILOT \
+                    and danger(x - 1, y) and danger(x + 1, y):
+                r.add((x, y))
+    return r
+
+
+def ilots_pieges(lv):
+    """Îlots d'une case qui n'existent pas sur la carte de départ : ce sont les pièges qui les créent."""
+    base = _ilots([list(r) for r in lv["map"]])
+    out = set()
+    for morts in range(4):
+        g, _, _ = appliquer(lv, morts)
+        out |= _ilots(g) - base
+    return out
+
+
 def _jouable(lv):
     for morts in range(4):
         g, porte, liens = appliquer(lv, morts)
         if not acces(lv, g, porte, liens)[0]:
             return False
+    # Les pièges surprises ne doivent jamais se combiner pour laisser une seule case où atterrir
+    # entre deux dangers (ex. 1-9 : pics qui jaillissent puis trou juste derrière) : c'est infaisable en vrai.
+    if "_ilots0" in lv and ilots_pieges(lv) - lv["_ilots0"]:
+        return False
     return True
 
 
@@ -4232,6 +4270,7 @@ def pimenter(lv, graine):
     g = list(lv["map"]); H = len(g)
     prec = None
     poses = 0
+    lv["_ilots0"] = ilots_pieges(lv)   # ceux du niveau dessiné à la main, avant les surprises
     for x0, L, y in lignes_droites(lv):
         x, reste = x0, L
         while reste >= 6:
@@ -4291,6 +4330,7 @@ def pimenter(lv, graine):
                         x += n + 4
                         continue
             x += 1
+    lv.pop("_ilots0", None)
     return poses
 
 
